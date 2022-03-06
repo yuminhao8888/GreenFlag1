@@ -34,6 +34,10 @@ public class CreateAccount extends AppCompatActivity {
 
     boolean isEmailValid = false, isPasswordValid = false, isRepeatPasswordValid = false;
 
+    // This is the name of your shared preferences file
+    // You can add the name you want
+    static final String sharedName = "MY_FILE";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,15 +55,39 @@ public class CreateAccount extends AppCompatActivity {
         btn = findViewById(R.id.button_back);
 
         // store an email address in local memory to mock there is already an email.
-        sharedPreferences = getSharedPreferences("email", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("email", "yu@mobileConsultingSolutions.us");
-        editor.commit();
+
+        // Here you are accessing or creating the shared preferences, the first argument is the file name
+        // As best practice you wrap it in an static variable
+        sharedPreferences = getSharedPreferences(sharedName, Context.MODE_PRIVATE);
+
+
+        // Here you are saving the same email
+        // We should be able to have this email dynamic
+        // editor.putString("email", "yu@mobileConsultingSolutions.us");
 
         // retrieve email from local memory and display it in toast
-        sharedPreferences = getSharedPreferences("email", Context.MODE_PRIVATE);
+
+        // Here no need to get the file again is you have created a global variable to be used in this class
+        // sharedPreferences = getSharedPreferences("email", Context.MODE_PRIVATE);
         emailInMemory = sharedPreferences.getString("email", null);
         //Toast.makeText(getApplicationContext(), emailInMemory, Toast.LENGTH_LONG).show();
+
+        // Here we will retrieve the email saved if there is any
+        if (emailInMemory != null) {
+            email.setText(emailInMemory);
+        }
+
+        // We need an action for the next button
+        // Here we will be saving the value entered in the email field
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Here I am saving the email entered into shared preferences
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("email", email.getText().toString());
+                editor.apply();
+            }
+        });
 
         // back button on click
         btn.setOnClickListener(new View.OnClickListener() {
@@ -67,8 +95,11 @@ public class CreateAccount extends AppCompatActivity {
             public void onClick(View view) {
                 //Toast.makeText(getApplicationContext(), "hello patrick", Toast.LENGTH_LONG).show();
 
-                Intent i = new Intent(getBaseContext(), MainActivity.class);
-                startActivity(i);
+                // Here you can simply call the on back pressed callback
+                // it will return to the latest activity in the back stack
+                onBackPressed();
+//                Intent i = new Intent(getBaseContext(), MainActivity.class);
+//                startActivity(i);
             }
         });
 
@@ -77,8 +108,6 @@ public class CreateAccount extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
 
                 String emailText = email.getText().toString();
-
-
 
                 if(!isEmailValid(emailText)){
                     email.setBackground(ContextCompat.getDrawable(getBaseContext(), R.drawable.text_input_invalid));
@@ -89,7 +118,8 @@ public class CreateAccount extends AppCompatActivity {
                 }
                 else {
 
-                    if(emailInMemory.equals(emailText) ){
+                    // Remember to check nullable values here
+                    if(emailInMemory != null && emailInMemory.equals(emailText) ){
                         email.setBackground(ContextCompat.getDrawable(getBaseContext(), R.drawable.text_input_invalid));
                         // display email error message
                         emailError.setText("An account already exists for this email address");
@@ -174,13 +204,10 @@ public class CreateAccount extends AppCompatActivity {
 
                 }
                 else if (passwordText != null && repeatPasswordText.equals(passwordText)) {
-
-
                     repeatPassword.setBackground(ContextCompat.getDrawable(getBaseContext(), R.drawable.text_input_valid));
                     repeatPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.tick, 0);
                     passwordError.setVisibility(View.INVISIBLE);
                     isRepeatPasswordValid = true;
-
                 }
 
                 updateNextButtonStatus();
